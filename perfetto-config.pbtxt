@@ -1,0 +1,61 @@
+# ProtoBuf TeXtual represention (.pbtx)
+# is file format.
+
+duration_ms: 25000 # 25 seconds
+
+buffers: {
+  size_kb: 131072 # 128 MiB
+  fill_policy: DISCARD
+}
+
+# Represents a DataSourceConfig Message 
+# Defined in data_source_config.proto
+# ftrace events defined in Kernel Source code:
+# https://github.com/torvalds/linux/blob/v6.2/include/trace/events/sched.h
+data_sources {
+  config {
+    name: "linux.ftrace"
+    target_buffer: 0
+    # Note you can find trace_events in tracefs/available_events
+    ftrace_config {
+      ftrace_events: "sched/sched_wakeup"
+      ftrace_events: "sched/sched_waking"
+      ftrace_events: "sched/sched_wakeup_new"
+      ftrace_events: "sched/sched_switch"
+      ftrace_events: "sched/sched_wait_task"
+      ftrace_events: "sched/sched_process_wait"
+      ftrace_events: "sched/sched_process_hang"
+      ftrace_events: "sched/sched_process_exit"
+      ftrace_events: "sched/sched_process_free"
+      
+      ftrace_events: "sched/sched_stat_runtime"  
+      ftrace_events: "sched/sched_stat_blocked"  
+      ftrace_events: "sched/sched_stat_sleep"  
+      ftrace_events: "sched/sched_stat_wait"  
+      
+      ftrace_events: "task/task_newtask"
+      ftrace_events: "task/task_rename"
+
+#      ftrace_events: "raw_syscalls/sys_enter"
+#      ftrace_events: "raw_syscalls/sys_exit"
+    }
+  }
+}
+
+data_sources: {
+  config {
+    name: "linux.process_stats"
+    target_buffer: 0
+  }
+}
+
+data_sources: {
+  config {
+    name: "track_event"
+    target_buffer: 0
+    track_event_config {
+      enabled_categories: "pi"
+    }
+  }
+}
+
