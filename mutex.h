@@ -3,7 +3,7 @@
 
 namespace synchronize {
 
-// Should conform to Lockable Named Requirement
+// Should conform to Mutex Named Requirement
 class Mutex {
   public:
     Mutex(bool priorityInheritance = false);
