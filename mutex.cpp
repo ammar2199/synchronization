@@ -20,8 +20,7 @@ void Mutex::unlock() {
 }
 
 bool Mutex::try_lock() {
-  int err = MutexTryLock(&mLock);
-  return err == 0;
+  return MutexTryLock(&mLock) == 0;
 }
 
 }; // namespace synchronize

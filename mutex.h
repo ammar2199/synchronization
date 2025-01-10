@@ -17,5 +17,5 @@ class Mutex {
     mutex_t mLock;
 };
 
-}; // namespace sync
+}; // namespace synchronize
 

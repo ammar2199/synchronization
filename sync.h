@@ -18,8 +18,6 @@ extern "C"
 
 #define MUTEX_PRIORITY_INHERITANCE 0x1
 
-// I want a library that's compatible with C and C++
-// Hence, write it in C, and let it be used in C++ too.
 typedef struct mutex_t {
   NS(atomic_int) mLock;
   bool mPiEnabled;

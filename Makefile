@@ -9,7 +9,7 @@ BINDIR = bin
 TEST_OBJECTS := tests/testconditionvariable.o tests/testmutex.o tests/testpimutex.o tests/testpimutexperf.o tests/testsemaphore.o tests/testutils.o
 TEST_HEADERS := tests/*.h
 
-$(shell mkdir $(BINDIR))
+$(shell mkdir -p $(BINDIR))
 
 CTest: sync.o CTest.o $(TEST_OBJECTS) 
 	$(CC) $(CFLAGS) -o $(BINDIR)/$@ $^
