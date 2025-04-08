@@ -1,6 +1,6 @@
 ## A Collection of Synchronization Primitives
 
-The following primitives are included and are built atop C/C++ atomics and futex(2):
+The following synchronization primitives are included and are built atop C/C++ atomics and futex():
 - Mutex
 - Mutex with Priority-Inheritance
 - Condition Variable
@@ -24,7 +24,7 @@ then from another terminal\
 ```$ ./runperfetto.sh ```
 
 #### Overview
-We create 3 threads running on a single core and set their priorities to low, medium, and high.
+We create 3 threads running on a single core and set their priorities such that one is low, medium, and high.
 The medium priority thread constantly loops. We let the low-priority thread grab a mutex, then have the high-priority thread contend for the same mutex.
 The results are shown below comparing both a pi-mutex and normal-mutex.
 
