@@ -6,14 +6,17 @@ The following synchronization primitives are included and are built atop C/C++ a
 - Condition Variable
 - Semaphore
 
-The implementation sits within sync.c and sync.cpp and can be used in both C & C++ projects. A C++ wrapper-class around our mutex is implemented within
-mutex.cpp/mutex.h. This class conforms to the [Mutex Named Requirement](https://en.cppreference.com/w/cpp/named_req/Mutex).
+The implementation sits within [sync.c](/sync.c) and can be used in both C & C++ projects. A C++ wrapper-class around our mutex is implemented within
+[mutex.cpp](/mutex.cpp)/[mutex.h](mutex.h). This class conforms to the [Mutex Named Requirement](https://en.cppreference.com/w/cpp/named_req/Mutex).
+
+[Note: good read on Futex](https://dept-info.labri.fr/~denis/Enseignement/2008-IR/Articles/01-futex.pdf)
 
 Some tests and benchmarks are included aswell.\
 To build and run:\
 ```$ make CTest && ./bin/CTest```\
 ```$ make CppTest && ./bin/CppTest```
 
+---
 
 ### Mutex-PI Test & Benchmark
 A small, and slightly contrived test showing the power of a PI-mutex is implemented in CppTest
