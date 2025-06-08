@@ -11,9 +11,9 @@ void PrintRuntime(const struct timespec* const start,
   assert(start && end && "Can't PrintRuntime() - NULL");
   uint64_t secDiff = end->tv_sec - start->tv_sec;
   uint64_t nsDiff = end->tv_nsec - start->tv_nsec;
-  uint64_t elapsedNs = secDiff * 1000000000 + nsDiff;
-  double elapsedMs = elapsedNs / 1000000.0;
-  printf("%s elapsed time: %f\n", str, elapsedMs);
+  uint64_t elapsedNs = (secDiff * 1000000000) + nsDiff;
+  double elapsedMs = (double)elapsedNs / 1e6;
+  printf("%s elapsed time: %fms\n", str, elapsedMs);
 }
 
 inline void PrintTestName(const char* name) {

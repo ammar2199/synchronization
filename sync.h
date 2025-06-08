@@ -17,10 +17,11 @@ extern "C"
 #endif 
 
 #define MUTEX_PRIORITY_INHERITANCE 0x1
+#define MUTEX_ALWAYS_WAKE 0x2
 
 typedef struct mutex_t {
   NS(atomic_int) mLock;
-  bool mPiEnabled;
+  uint32_t mFlags;
 } mutex_t; 
 
 int MutexInit(mutex_t* const m, uint32_t flags);

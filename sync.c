@@ -12,10 +12,14 @@
 
 // TODO: Test on arm64 with different memory_orders
 
+static inline long futex(uint32_t* addr, int futex_op, uint32_t val) {
+  return syscall(SYS_futex, addr, futex_op, val, NULL, NULL, NULL);
+}
+
 int MutexInit(mutex_t* const m, uint32_t flags) {
-  if (!m) return EINVAL;
+  if (!m || flags > 3) return EINVAL;
   m->mLock = 0;
-  m->mPiEnabled = flags & MUTEX_PRIORITY_INHERITANCE;
+  m->mFlags = flags;
   return 0;
 }
 
@@ -30,9 +34,29 @@ static int MutexLockNormal(mutex_t* const m) {
       // Either we were woken up, never slept, or a spurious wake-up occured. 
       if (err == EINTR) return EINTR; // Woken up by signal. Report
       expected = 0; 
-    } while (!atomic_compare_exchange_strong_explicit(&m->mLock, &expected, 1, memory_order_acquire, memory_order_acquire));
+    } while (!atomic_compare_exchange_strong_explicit(&m->mLock, &expected, 1, memory_order_acquire, memory_order_relaxed));
   }
   // Lock Acquired
+  return 0;
+}
+
+static int MutexLockNormal2(mutex_t* const m) {
+  int expected = 0;
+  // Try to acquire lock 
+  if (!atomic_compare_exchange_strong_explicit(&m->mLock, &expected, 1, memory_order_acquire, memory_order_relaxed)) {
+    do {
+      // Failed to acquire lock - need to sleep, set mLock = 2, so unlocking-thread knows to wake.
+      expected = 1;
+      // Signal that we're a waiting thread. This will either fail or succeed.
+      atomic_compare_exchange_strong_explicit(&m->mLock, &expected, 2, memory_order_relaxed, memory_order_relaxed);
+      long err = futex((uint32_t*)&m->mLock, FUTEX_WAIT, 2); // If the operation above was successful
+                                                             // or the operation failed but m->mLock was already 2 we will
+                                                             // FUTEX_WAIT. If it wasn't, let's try to acquire the lock again.
+      // Either we were woken up, never slept, or a spurious wake-up occured.
+      if (err == EINTR) return EINTR; // Woken up by signal. Report.
+      expected = 0;
+    } while (!atomic_compare_exchange_strong_explicit(&m->mLock, &expected, 2, memory_order_acquire, memory_order_relaxed));
+  }
   return 0;
 }
 
@@ -50,15 +74,21 @@ static int MutexLockPi(mutex_t* const m) {
 
 int MutexLock(mutex_t* const m) {
   if (!m) return EINVAL;
-  if (m->mPiEnabled) {
-    return MutexLockPi(m);
-  }
-  return MutexLockNormal(m);
+  if (m->mFlags & MUTEX_PRIORITY_INHERITANCE) return MutexLockPi(m);
+  if (m->mFlags & MUTEX_ALWAYS_WAKE) return MutexLockNormal(m);
+  return MutexLockNormal2(m);
 }
 
 static int MutexUnlockNormal(mutex_t* const m) { 
   atomic_store_explicit(&m->mLock, 0, memory_order_release);
   syscall(SYS_futex, (uint32_t*) &m->mLock, 1, NULL, NULL, NULL);
+  return 0;
+}
+
+static int MutexUnlockNormal2(mutex_t* const m) {
+  if (atomic_exchange_explicit(&m->mLock, 0, memory_order_release) == 2) {
+    futex((uint32_t*)&m->mLock, FUTEX_WAKE, 1);
+  }
   return 0;
 }
 
@@ -73,15 +103,14 @@ static int MutexUnlockPi(mutex_t* const m) {
 
 int MutexUnlock(mutex_t* const m) {
   if (!m) return EINVAL;
-  if (m->mPiEnabled) {
-    return MutexUnlockPi(m);
-  }
-  return MutexUnlockNormal(m);
+  if (m->mFlags & MUTEX_PRIORITY_INHERITANCE) return MutexUnlockPi(m);
+  if (m->mFlags & MUTEX_ALWAYS_WAKE) return MutexUnlockNormal(m);
+  return MutexUnlockNormal2(m);
 }
 
 static int MutexTryLockNormal(mutex_t* const m) {
  int expected = 0;
- if (atomic_compare_exchange_strong_explicit(&m->mLock, &expected, 1, memory_order_acquire, memory_order_acquire)) {
+ if (atomic_compare_exchange_strong_explicit(&m->mLock, &expected, 1, memory_order_acquire, memory_order_relaxed)) {
    return 0;
  }
  return EBUSY;
@@ -90,7 +119,7 @@ static int MutexTryLockNormal(mutex_t* const m) {
 static int MutexTryLockPi(mutex_t* const m) {
   int expected = 0;
   pid_t tid = gettid();
-  if (atomic_compare_exchange_strong_explicit(&m->mLock, &expected, (int)tid, memory_order_acquire, memory_order_acquire)) {
+  if (atomic_compare_exchange_strong_explicit(&m->mLock, &expected, (int)tid, memory_order_acquire, memory_order_relaxed)) {
     return 0;
   }
   return EBUSY;
@@ -98,9 +127,7 @@ static int MutexTryLockPi(mutex_t* const m) {
 
 int MutexTryLock(mutex_t* const m) {
   if (!m) return EINVAL;
-  if (m->mPiEnabled) {
-    return MutexTryLockPi(m);   
-  }
+  if (m->mFlags & MUTEX_PRIORITY_INHERITANCE) return MutexTryLockPi(m);   
   return MutexTryLockNormal(m);
 }
 
