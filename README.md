@@ -3,7 +3,7 @@
 The following synchronization primitives are included and are built atop C/C++ atomics and futex():
 - Mutex
 - Mutex with Priority-Inheritance
-- Condition Variable
+- Condition Variable [TODO: Need to fix for Ping-Pong testcase]
 - Semaphore
 
 The implementation sits within [sync.c](/sync.c) and can be used in both C & C++ projects. A C++ wrapper-class around our mutex is implemented within
