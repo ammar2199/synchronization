@@ -37,6 +37,7 @@ int main(int argc, char** argv) {
   LOG_RESULT(SemaphoreTest());
 
   LOG_RESULT(ConditionVariableTest());
+  LOG_RESULT(ConditionVariableTest2());
    
   printf("End Tests\n");
   return 0;
